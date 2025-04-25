@@ -10,4 +10,4 @@ A mod that allows the user to change how fast they want to mix their items in Sc
 
 Thunderstore - https://thunderstore.io/c/schedule-i/p/Zlatan/FasterMixing/
 
-Nexusmods - https://thunderstore.io/c/schedule-i/p/Zlatan/FasterMixing/
+Nexusmods - https://www.nexusmods.com/schedule1/mods/820
