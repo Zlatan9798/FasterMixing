@@ -11,6 +11,7 @@ using HarmonyLib;
 using Newtonsoft.Json;
 using System.IO;
 using MelonLoader.TinyJSON;
+using JetBrains.Annotations;
 
 namespace FasterMixing
 {
@@ -22,8 +23,9 @@ namespace FasterMixing
             public int MixTimePerItem { get; set; }
             public bool InstantMixing { get; set; }
             public int MixTimeForAnything { get; set; }
+            public int MaxMixQuantity { get; set; }
         }
-
+        
         public static Settings Modsettings;
 
         public override void OnInitializeMelon()
@@ -34,6 +36,7 @@ namespace FasterMixing
             harmony.PatchAll();
 
         }
+
         private void LoadSettings()
         {
             try
@@ -41,7 +44,7 @@ namespace FasterMixing
                 string settingsPath = Path.Combine(Directory.modDirectory, "configFasterMixing.json");
                 if (!File.Exists(settingsPath))
                 {
-                    var defaultSettings = new Settings { MixTimePerItem = 1, InstantMixing = false, MixTimeForAnything = 0 };
+                    var defaultSettings = new Settings { MixTimePerItem = 1, InstantMixing = false, MixTimeForAnything = 0, MaxMixQuantity = 20};
                     File.WriteAllText(settingsPath, JsonConvert.SerializeObject(defaultSettings, Formatting.Indented));
                     MelonLogger.Msg("No settings file found. Created one with default settings.");
                 }
@@ -55,8 +58,10 @@ namespace FasterMixing
             }
         }
 
+
         [HarmonyPatch(typeof(MixingStation), "GetMixTimeForCurrentOperation")]
-        class Patching
+        [HarmonyPatch(typeof(MixingStation), "Start")]
+        class MixingTimePatch
         {
 
             static void Postfix(ref int __result, MixingStation __instance)
@@ -70,8 +75,9 @@ namespace FasterMixing
                     MelonLogger.Msg("Tried to put mixtime per item less or equal to 0, changing the value to instant mix");
                     Modsettings.MixTimePerItem = 1;
                     Modsettings.InstantMixing = true;
+                   
                 }
-                //If instant mixing is set to true, than that will override MixTimePer20Item and MixTimePerItem
+                //If instant mixing is set to true, then that will override MixTimePer20Item and MixTimePerItem
                 if (Modsettings.InstantMixing)
                 {
                     __result = 1;
@@ -88,6 +94,16 @@ namespace FasterMixing
                     MelonLogger.Msg($"Changed mix time to {__result}.");
                 }
 
+            }
+
+            
+        }
+
+        class MixingStationCapacityPatch
+        {
+            static void Postfix(MixingStation __instance)
+            {
+                __instance.MaxMixQuantity = Modsettings.MaxMixQuantity;
             }
         }
 
