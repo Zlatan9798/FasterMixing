@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using System.IO;
 using MelonLoader.TinyJSON;
 using JetBrains.Annotations;
+using ScheduleOne.ItemFramework;
 
 namespace FasterMixing
 {
@@ -27,6 +28,7 @@ namespace FasterMixing
         }
 
         public static Settings Modsettings;
+        public static bool isInMixer = false;
 
         public override void OnInitializeMelon()
         {
@@ -36,7 +38,7 @@ namespace FasterMixing
             harmony.PatchAll();
 
         }
-
+        
         private void LoadSettings()
         {
             try
@@ -102,10 +104,30 @@ namespace FasterMixing
         {
             static void Postfix(MixingStation __instance)
             {
+                isInMixer = true;
                 MelonLogger.Msg("Postfix just been called");
                 __instance.MaxMixQuantity = Modsettings.MaxMixQuantity;
                 MelonLogger.Msg("Should have changed");
                 MelonLogger.Msg(__instance.MaxMixQuantity);
+            }
+            
+        }
+     
+        [HarmonyPatch(typeof(ItemInstance), "get_StackLimit")]
+        class ItemHoldCapacityPatch
+        {
+            
+            private static void Postfix(ref int __result)
+            {
+                // Incase I dont want maximum items always changed, only at mixing station
+                if (isInMixer)
+                {
+                    __result = Modsettings.MaxMixQuantity;
+                }
+                
+                isInMixer = false;
+                
+               // __result = Modsettings.MaxMixQuantity;
             }
         }
 
